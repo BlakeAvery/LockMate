@@ -98,7 +98,7 @@ void addCard() {
   lcd.clear();
   lcd.print("Tap To Add Card");
   delay(150);
-  Serial.println("Programming card detected. \nTap card against sensor to add to system. \nYou may add up to 5 cards. \nTap programming card when done.");
+  Serial.println("Programming card detected. \nTap card against sensor to add to system. \nYou may add up to 10 cards. \nTap programming card when done.");
   while(true) {
     lcd.print("Tap To Add Card");
     uint32_t card = readCard();
