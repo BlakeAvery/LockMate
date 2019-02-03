@@ -13,7 +13,7 @@ of expansion board
 
 3. Connect servo motor as shown:
 
-[//]: # (TODO: Add annotated image)
+![Pinout for servo motor](https://i.imgur.com/omIZOsu.jpg)
 
 4. Flash .ino sketch to board
 
