@@ -1,4 +1,3 @@
-#include <Servo.h>
 #include <Stepper.h>
 #include <Wire.h>
 #include <SPI.h>
@@ -6,30 +5,29 @@
 #include "rgb_lcd.h"
 #define PN532_IRQ (2)
 #define PN532_RESET (3)
-Servo servo;
+//Servo servo;
 rgb_lcd lcd;
 Adafruit_PN532 nfc(PN532_IRQ, PN532_RESET);
 Stepper steppermotor(32, 8, 10, 9, 11);
-uint32_t meme[5];
-uint8_t sizeofmeme = 0;
+uint32_t keys[10];
+uint8_t sizeofkeys = 0;
 bool wasUnlocked = false;
 void setup() {
   Serial.begin(115200);
   lcd.begin(16, 2);
-  lcd.setRGB(131, 7, 255); //Default
+  lcd.setRGB(131, 7, 255);
   nfc.begin();
-  //servo.attach(9);
-  Serial.println("LockMeme init!");
+  Serial.println("LockMate init!");
   uint32_t versiondata = nfc.getFirmwareVersion();
   if(!versiondata) {
     Serial.print("Fatal error: NFC hardware is missing! Halting.");
     while(1);
   }
-  Serial.print("Found chip PN5"); Serial.println((versiondata>>24) & 0xFF, HEX); //OH GOD OH FUCK
+  Serial.print("Found chip PN5"); Serial.println((versiondata>>24) & 0xFF, HEX);
   Serial.print("Firmware ver. "); Serial.print((versiondata>>16) & 0xFF, DEC); 
   Serial.print('.'); Serial.println((versiondata>>8) & 0xFF, DEC);
   nfc.SAMConfig();
-  Serial.println("LockMeme ready for key card. Startup complete.");
+  Serial.println("LockMate ready for key card. Startup complete.");
 }
 
 uint32_t readCard() {
@@ -39,7 +37,6 @@ uint32_t readCard() {
   success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength);
   if (success) {
     Serial.println("Key detected");
-    //nfc.PrintHex(uid, uidLength);
     if (uidLength == 4) {
       uint32_t cardid = uid[0];
       cardid <<= 8;
@@ -56,7 +53,7 @@ uint32_t readCard() {
 
 bool checkForCard(uint32_t num) {
   for(int x = 0; x < 5; x++) {
-    if(num == meme[x]) {
+    if(num == keys[x]) {
       return true;
     }
   }
@@ -65,8 +62,6 @@ bool checkForCard(uint32_t num) {
 void loop() {
   lcd.print("Please Tap Card");
   if(wasUnlocked) {
-    //servo.attach(9);
-    //servo.write(0);
     lcd.setRGB(131, 7, 255);
     wasUnlocked = false;
   }
@@ -79,17 +74,9 @@ void loop() {
     lcd.clear();
     lcd.print("Card Accepted.");
     Serial.println("Card " + String(card) + " identified. Unlocking.");
-    /*for(int angle = 0; angle < 45; angle++) {
-      servo.write(angle);
-      delay(10);
-    }*/
     steppermotor.setSpeed(1000);  
     steppermotor.step(340);
     delay(5000);
-    /*for(int angle = 45; angle >= 1; angle--) {
-      servo.write(angle);
-      delay(10);
-    }*/
     steppermotor.setSpeed(1000);  
     steppermotor.step(340);
     wasUnlocked = true;
@@ -113,6 +100,7 @@ void addCard() {
   delay(150);
   Serial.println("Programming card detected. \nTap card against sensor to add to system. \nYou may add up to 5 cards. \nTap programming card when done.");
   while(true) {
+    lcd.print("Tap To Add Card");
     uint32_t card = readCard();
     delay(200);
     if(card == 2527921356) {
@@ -123,7 +111,7 @@ void addCard() {
       lcd.setRGB(131, 7, 255);
       lcd.clear();
       return;
-    } else if(sizeofmeme == 5) {
+    } else if(sizeofkeys == 10) {
         lcd.clear();
         lcd.print("Card bank full.");
         delay(1500);
@@ -142,12 +130,13 @@ void addCard() {
       lcd.clear();
       return;
     } else {
-      meme[sizeofmeme] = card;
-      sizeofmeme++;
+      keys[sizeofkeys] = card;
+      sizeofkeys++;
       Serial.println("Card " + String(card) + " added to system.");
       lcd.clear();
       lcd.print("Card added.");
       delay(1500);
+      lcd.clear();
     }
   }
 }
